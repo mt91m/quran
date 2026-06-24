@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اپلیکیشن حفظ قرآن - جزء ۳۰</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1 id="app-title">حفظ الفرقان (جزء ۳۰)</h1>
+    </header>
+
+    <main class="app-main">
+        <!-- صفحه خانه -->
+        <section id="v-home" class="view active">
+            <div class="card">
+                <h3>📊 وضعیت پیشرفت شما</h3>
+                <div class="progress-container">
+                    <div id="main-progress" class="progress-fill"></div>
+                </div>
+                <p id="stat-text" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
+                <button onclick="openBookmarks()" class="btn-primary" style="background:#f1c40f; color:#000; margin-top:10px; width:100%;">⭐ مشاهده نشانک‌ها</button>
+            </div>
+            <div class="card">
+                <h3>💡 راهنما</h3>
+                <p>در بخش حفظ، با کلیک روی هر کلمه می‌توانید آن را پنهان کنید (تبدیل به دایره) تا حافظه خود را بسنجید. همچنین ترجمه هر آیه در زیر آن نمایش داده می‌شود.</p>
+            </div>
+        </section>
+
+        <!-- صفحه حفظ -->
+        <section id="v-mem" class="view">
+            <div class="card">
+                <div class="selectors">
+                    <select id="s-sel" onchange="changeSoreh()"></select>
+                    <select id="a-sel" onchange="changeAyah()"></select>
+                </div>
+                
+                <!-- هدر آیه (نام سوره و شماره) -->
+                <div id="ayah-meta" class="ayah-meta" style="text-align: center; font-weight: bold; margin-bottom: 10px; color: #27ae60;"></div>
+
+                <!-- متن اصلی آیه -->
+                <div id="ayah-text" class="ayah-container"></div>
+                
+                <!-- بخش معنی (توسط جاوااسکریپت پر می‌شود) -->
+                <div id="ayah-translation" class="ayah-translation" style="text-align: center; margin-top: 15px; color: #555; font-style: italic; border-top: 1px dashed #ddd; padding-top: 10px;"></div>
+
+                <div class="audio-controls">
+                    <button onclick="prevA()" class="nav-btn">آیه قبل</button>
+                    <!-- تغییر تابع پخش برای هماهنگی با audio.js -->
+                    <button id="play-btn" onclick="playAyahAudio(quranData[curS].number, quranData[curS].ayahs[curA].n)" class="play-btn">پخش صوت</button>
+                    <button onclick="nextA()" class="nav-btn">آیه بعد</button>
+                </div>
+                
+                <div class="action-btns">
+                    <button id="bookmark-btn" onclick="toggleBookmark()">⭐ نشانک</button>
+                    <button id="done-btn" onclick="toggleMemorized()">✅ حفظ کردم</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- صفحه آزمون -->
+        <section id="v-test" class="view">
+            <div id="test-setup" class="card">
+                <h3>📝 تنظیمات آزمون</h3>
+                
+                <div class="test-range-box" style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #90caf9;">
+                    <p style="margin-top:0; font-weight:bold; font-size: 0.95em; color: #1565c0;">📍 محدوده آزمون:</p>
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                        <span style="font-size:0.85em; min-width:30px;">از:</span>
+                        <select id="t-s-start" onchange="updateTestAyahs('start')" style="flex:2; padding:8px; border-radius: 5px;"></select>
+                        <select id="t-a-start" style="flex:1; padding:8px; border-radius: 5px;"></select>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <span style="font-size:0.85em; min-width:30px;">تا:</span>
+                        <select id="t-s-end" onchange="updateTestAyahs('end')" style="flex:2; padding:8px; border-radius: 5px;"></select>
+                        <select id="t-a-end" style="flex:1; padding:8px; border-radius: 5px;"></select>
+                    </div>
+                </div>
+
+                <label>تعداد سوالات:</label>
+                <input type="number" id="t-count" value="5" min="1" style="width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 5px; border: 1px solid #ccc;">
+                
+                <label>نوع آزمون:</label>
+                <select id="t-type" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <option value="mix">ترکیبی (همه حالات)</option>
+                    <option value="testi">تستی (انتخاب سوره)</option>
+                    <option value="truefalse">صحیح / غلط</option>
+                    <option value="sort">مرتب‌سازی کلمات</option>
+                    <option value="blank">جای خالی (تایپی)</option>
+                </select>
+                
+                <button onclick="startNewTest()" class="btn-primary" style="margin-top:20px; width:100%;">شروع آزمون</button>
+            </div>
+            
+            <div id="test-screen" class="card" style="display:none;">
+                <div id="test-progress-text" style="font-weight: bold; color: #7f8c8d; margin-bottom: 10px;"></div>
+                <div id="test-question" class="test-q-box" style="font-size: 1.2em; margin-bottom: 20px; text-align: center;"></div>
+                <div id="test-options" class="test-opts-grid"></div>
+                <div id="test-feedback" style="margin-top: 15px; text-align: center; font-weight: bold;"></div>
+                <button id="next-q-btn" onclick="nextQuestion()" class="btn-primary" style="display:none; margin-top:20px; width: 100%;">سوال بعدی</button>
+            </div>
+        </section>
+
+        <!-- صفحه جستجو -->
+        <section id="v-search" class="view">
+            <div class="card">
+                <div class="search-box" style="display: flex; gap: 5px;">
+                    <input type="text" id="search-input" placeholder="مثلاً: عم یتسائلون..." style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button onclick="runSearch()" style="background: #27ae60; color: white; border: none; padding: 0 15px; border-radius: 5px; cursor: pointer;">جستجو</button>
+                </div>
+                <div id="search-results" style="margin-top: 20px;"></div>
+            </div>
+        </section>
+
+        <!-- صفحه حمایت -->
+        <section id="v-support" class="view">
+            <div class="card" style="text-align:center;">
+                <h3>❤️ حمایت از پروژه</h3>
+                <p>در صورت تمایل برای توسعه بیشتر این اپلیکیشن، می‌توانید با معرفی برنامه به دیگران از ما حمایت کنید.</p>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <p style="font-weight: bold; color: #2c3e50;">نشانی ما در بله و ایتا:</p>
+                    <h2 style="color: #27ae60; direction: ltr;">@heifzalforghan</h2>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- مودال نشانک‌ها -->
+    <div id="bookmark-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 80%;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0;">نشانک‌های شما</h3>
+                <span onclick="closeBookmarks()" style="cursor:pointer; font-size:28px; font-weight: bold;">&times;</span>
+            </div>
+            <div id="bookmark-list" style="overflow-y: auto; max-height: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- ناوبری پایین -->
+    <nav class="bottom-nav">
+        <button onclick="showV('v-home', this)" class="active">🏠 خانه</button>
+        <button onclick="showV('v-mem', this)">📖 حفظ</button>
+        <button onclick="showV('v-test', this)">📝 آزمون</button>
+        <button onclick="showV('v-search', this)">🔍 جستجو</button>
+        <button onclick="showV('v-support', this)">📞 ارتباط</button>
+    </nav>
+
+    <!-- ترتیب لود اسکریپت‌ها مهم است -->
+    <script src="data.js"></script>
+    <script src="audio.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
